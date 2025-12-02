@@ -39,3 +39,95 @@ sudo docker ps
 aws learner. security in instance add tcp 9090 0.0.0.0
 copy public ipv4 addr
 http://addr/hellomavenapp(war file name)
+
+
+
+3.Create Multi Container of mysql and word press through Docker
+create this folder-->wordpress-mysql
+create a new file-->docker-compose.yml
+docke-compose.yml
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: wordpressdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress_container
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "8081:80" #change port
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wordpressdb
+    volumes:
+      - wordpress_data:/var/www/html
+
+volumes:
+  mysql_data:
+  wordpress_data:
+
+
+open cmd in this folder,then 
+docker login
+docker compose up -d
+(pulling process)
+docker ps
+then go to http://localhost:8081
+login there in wordpress
+docker compose down-->to stop
+Start Again Later-->docker compose up -d
+
+
+
+4.Illustrate the scaling of a container named mysql through Kubernetes.
+Open CMD or PowerShell and run:
+minikube start
+create a folder->k8s-mysql --> create file mysql-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:5.7
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root123
+ 
+
+go to that folder in cmd
+kubectl apply -f mysql-deployment.yaml
+kubectl get pods
+kubectl scale deployment mysql --replicas=3
+kubectl get pods
+kubectl scale deployment mysql --replicas=1
+kubectl get pods
+kubectl delete deployment mysql
